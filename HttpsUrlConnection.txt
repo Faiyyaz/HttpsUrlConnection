@@ -1,0 +1,141 @@
+import org.apache.http.NameValuePair;
+import org.apache.http.client.ClientProtocolException;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.UnsupportedEncodingException;
+import java.net.URL;
+import java.net.URLEncoder;
+import java.util.List;
+
+import javax.net.ssl.HttpsURLConnection;
+
+public class HttpsUrlConnections {
+
+    static JSONObject response = null;
+    static int statusCode;
+    OutputStream os;
+    BufferedWriter writer;
+    static String result;
+    public final static String GET = "GET";
+    public final static String POST = "POST";
+
+    public HttpsUrlConnections() {
+
+    }
+
+    public String makeServiceCall(String url, String method) {
+        return this.makeServiceCall(url, method, null);
+    }
+
+
+    public String makeServiceCall(String url, String method,
+                                  List<NameValuePair> params) {
+        try {
+            HttpsURLConnection urlConnection;
+            URL urls = new URL(url);
+            urlConnection = (HttpsURLConnection) urls.openConnection();
+            urlConnection.setRequestMethod(method);
+            urlConnection.setDoInput(true);
+            urlConnection.setDoOutput(true);
+
+
+            if (method.equalsIgnoreCase("POST")) {
+
+                if (params != null) {
+                    os = urlConnection.getOutputStream();
+                    writer = new BufferedWriter(
+                            new OutputStreamWriter(os, "UTF-8"));
+                    writer.write(getQuery(params));
+                    writer.flush();
+                    writer.close();
+                    os.close();
+                    urlConnection.connect();
+
+                    statusCode = urlConnection.getResponseCode();
+
+                    if (statusCode == 200) {
+                        BufferedReader r = new BufferedReader(new InputStreamReader(urlConnection.getInputStream()));
+                        StringBuilder response = new StringBuilder();
+                        String line;
+                        while ((line = r.readLine()) != null) {
+                            response.append(line);
+                        }
+                        parseResult(response.toString());
+                        result = "1";
+                    } else {
+                        result = "0";
+                    }
+                }
+
+            } else if (method.equalsIgnoreCase("GET")) {
+
+                if (params != null) {
+                    os = urlConnection.getOutputStream();
+                    writer = new BufferedWriter(
+                            new OutputStreamWriter(os, "UTF-8"));
+                    writer.write(getQuery(params));
+                    writer.flush();
+                    writer.close();
+                    os.close();
+                    urlConnection.connect();
+
+                    statusCode = urlConnection.getResponseCode();
+
+                    if (statusCode == 200) {
+                        BufferedReader r = new BufferedReader(new InputStreamReader(urlConnection.getInputStream()));
+                        StringBuilder response = new StringBuilder();
+                        String line;
+                        while ((line = r.readLine()) != null) {
+                            response.append(line);
+                        }
+                        parseResult(response.toString());
+                        result = "1";
+                    } else {
+                        result = "0";
+                    }
+                }
+            }
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        } catch (ClientProtocolException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return response.toString();
+    }
+
+    private String getQuery(List<NameValuePair> params) throws UnsupportedEncodingException {
+        StringBuilder result = new StringBuilder();
+        boolean first = true;
+
+        for (NameValuePair pair : params) {
+            if (first)
+                first = false;
+            else
+                result.append("&");
+
+            result.append(URLEncoder.encode(pair.getName(), "UTF-8"));
+            result.append("=");
+            result.append(URLEncoder.encode(pair.getValue(), "UTF-8"));
+        }
+
+        return result.toString();
+    }
+
+    private void parseResult(String result) {
+        try {
+            response = new JSONObject(result);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+    }
+}

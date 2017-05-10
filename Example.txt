@@ -1,0 +1,59 @@
+private class SynExample extends AsyncTask<String, Void, Void> {
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            // Showing progress dialog
+            pDialogSend = new ProgressDialog(ChangeProfile.this);
+            pDialogSend.setMessage("Updating Your Profile Details... Please Wait For A While");
+            pDialogSend.setCancelable(false);
+            pDialogSend.setIndeterminate(false);
+            pDialogSend.show();
+        }
+
+        @Override
+        protected Void doInBackground(String... params) {
+
+            try {
+                // Create an array
+                arraylist = new ArrayList<HashMap<String, String>>();
+                // Retrieve JSON Objects from the given URL address
+                List<NameValuePair> params = new ArrayList<NameValuePair>();
+                serviceClient = new HttpsUrlConnection();
+                response = serviceClient.makeServiceCall(url, HttpsUrlConnection.POST, params);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void args) {
+            try {
+
+                pDialogSend.dismiss();
+
+                if (!TextUtils.isEmpty(response)) {
+                    try {
+                        JSONObject res = new JSONObject(response);
+                        JSONArray posts = res.optJSONArray("result");
+                        if (posts != null) {
+                            for (int i = 0; i < posts.length(); i++) {
+                                HashMap<String, String> map = new HashMap<String, String>();
+                                JSONObject jsonobject = posts.getJSONObject(i);
+                                // Retrive JSON Objects
+                                map.put(ID, jsonobject.getString(ID));
+                                arraylist.add(map);
+                            }
+                            adapter = new ListAdapter(AllPackages.this, arraylist);
+                            listViewSubject.setAdapter(adapter);
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
